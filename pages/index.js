@@ -10,11 +10,13 @@ import abi from '../utils/GmPortal.json';
 
 import Header from '../components/header';
 import Footer from '../components/footer';
+import { EtherscanProvider } from '@ethersproject/providers';
 
 export default function Home() {
   const [currentAccount, setCurrentAccount] = useState('');
   const [totalGms, setTotalGms] = useState(0);
-  const contractAddress = '0x2E43E03A6390acB8aA7226D6FE766b3B2f225fFc';
+  const [allGms, setAllGms] = useState([]);
+  const contractAddress = '0x31814680AfE1cE945F75c763e44D72Fe85bfda26';
   const contractABI = abi.abi;
 
   const checkIfWalletIsConnected = async () => {
@@ -34,6 +36,7 @@ export default function Home() {
         const account = accounts[0];
         console.log('Found an authorised account:', account);
         setCurrentAccount(account);
+        getAllGms();
       } else {
         console.log('No authorised account found');
       }
@@ -69,7 +72,7 @@ export default function Home() {
         const signer = provider.getSigner();
         const gmPortalContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        const gmTxn = await gmPortalContract.gm();
+        const gmTxn = await gmPortalContract.gm('gm');
         console.log('Mining...', gmTxn.hash);
 
         await gmTxn.wait();
@@ -78,6 +81,35 @@ export default function Home() {
         let count = await gmPortalContract.getTotalGms();
         setTotalGms(count.toNumber());
         console.log('Retrieved total gm count:', count.toNumber());
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getAllGms = async () => {
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const gmPortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        const gms = await gmPortalContract.getAllGms();
+
+        let gmsCleaned = [];
+        gms.forEach((gm) => {
+          gmsCleaned.push({
+            address: gm.gmer,
+            timestamp: new Date(gm.timestamp * 1000),
+            message: gm.message,
+          });
+        });
+
+        console.log({ gmsCleaned });
+        setAllGms(gmsCleaned);
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -115,6 +147,18 @@ export default function Home() {
               <AlertIcon />
               {totalGms && totalGms} gms have been gmed
             </Alert>
+          </div>
+
+          <div>
+            {allGms.map((gm, index) => {
+              return (
+                <div key={index}>
+                  <div>Address: {gm.address}</div>
+                  <div>Time: {gm.timestamp.toString()}</div>
+                  <div>Message: {gm.message}</div>
+                </div>
+              );
+            })}
           </div>
         </main>
       </Grid>
