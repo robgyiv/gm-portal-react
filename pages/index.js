@@ -10,13 +10,12 @@ import abi from '../utils/GmPortal.json';
 
 import Header from '../components/header';
 import Footer from '../components/footer';
-import { EtherscanProvider } from '@ethersproject/providers';
 
 export default function Home() {
   const [currentAccount, setCurrentAccount] = useState('');
   const [totalGms, setTotalGms] = useState(0);
   const [allGms, setAllGms] = useState([]);
-  const contractAddress = '0x31814680AfE1cE945F75c763e44D72Fe85bfda26';
+  const contractAddress = '0x5D3a14711127bdC9f4d6A92d159De27996b917a3';
   const contractABI = abi.abi;
 
   const checkIfWalletIsConnected = async () => {
