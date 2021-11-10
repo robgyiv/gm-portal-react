@@ -15,7 +15,7 @@ export default function Home() {
   const [currentAccount, setCurrentAccount] = useState('');
   const [totalGms, setTotalGms] = useState(0);
   const [allGms, setAllGms] = useState([]);
-  const contractAddress = '0x5D3a14711127bdC9f4d6A92d159De27996b917a3';
+  const contractAddress = '0xB1d267C6bCF1a7955C071428fd4020CeB2dc7E0E';
   const contractABI = abi.abi;
 
   const checkIfWalletIsConnected = async () => {
@@ -71,7 +71,7 @@ export default function Home() {
         const signer = provider.getSigner();
         const gmPortalContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        const gmTxn = await gmPortalContract.gm('gm');
+        const gmTxn = await gmPortalContract.gm('gm', { gasLimit: 300000 });
         console.log('Mining...', gmTxn.hash);
 
         await gmTxn.wait();
@@ -119,6 +119,36 @@ export default function Home() {
 
   useEffect(() => {
     checkIfWalletIsConnected();
+  }, []);
+
+  useEffect(() => {
+    let gmPortalContract;
+
+    const onNewGm = (from, timestamp, message) => {
+      console.log('New gm', from, timestamp, message);
+      setAllGms((prevState) => [
+        ...prevState,
+        {
+          address: from,
+          timestamp: new Date(timestamp * 1000),
+          message: message,
+        },
+      ]);
+    };
+
+    if (window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      gmPortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+      gmPortalContract.on('NewGm', onNewGm);
+    }
+
+    return () => {
+      if (gmPortalContract) {
+        gmPortalContract.off('NewGm', onNewGm);
+      }
+    };
   }, []);
 
   return (
