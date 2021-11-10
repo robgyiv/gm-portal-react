@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from 'react';
 
-import { Button, Container, Grid } from '@chakra-ui/react';
+import { Alert, AlertIcon, Button, Container, Grid } from '@chakra-ui/react';
+import { ethers } from 'ethers';
 
 import Head from 'next/head';
 import Image from 'next/image';
+
+import abi from '../utils/GmPortal.json';
 
 import Header from '../components/header';
 import Footer from '../components/footer';
 
 export default function Home() {
   const [currentAccount, setCurrentAccount] = useState('');
+  const [totalGms, setTotalGms] = useState(0);
+  const contractAddress = '0x2E43E03A6390acB8aA7226D6FE766b3B2f225fFc';
+  const contractABI = abi.abi;
+
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
@@ -53,6 +60,32 @@ export default function Home() {
     }
   };
 
+  const gm = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const gmPortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        const gmTxn = await gmPortalContract.gm();
+        console.log('Mining...', gmTxn.hash);
+
+        await gmTxn.wait();
+        console.log('Mined:', gmTxn.hash);
+
+        let count = await gmPortalContract.getTotalGms();
+        setTotalGms(count.toNumber());
+        console.log('Retrieved total gm count:', count.toNumber());
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     checkIfWalletIsConnected();
   }, []);
@@ -75,6 +108,13 @@ export default function Home() {
                 Connect Wallet
               </Button>
             )}
+            <Button size="lg" onClick={gm}>
+              gm
+            </Button>
+            <Alert status="success">
+              <AlertIcon />
+              {totalGms && totalGms} gms have been gmed
+            </Alert>
           </div>
         </main>
       </Grid>
