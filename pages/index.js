@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 
-import { Alert, AlertIcon, Button, Container, Grid } from '@chakra-ui/react';
+import { Alert, AlertIcon, Button, Center, Container, Grid, GridItem } from '@chakra-ui/react';
 import { ethers } from 'ethers';
 
 import Head from 'next/head';
-import Image from 'next/image';
 
 import abi from '../utils/GmPortal.json';
 
@@ -22,18 +21,11 @@ export default function Home() {
     try {
       const { ethereum } = window;
 
-      if (!ethereum) {
-        console.log('Ethereum wallet not detected - install MetaMask!');
-      } else {
-        console.log('We have the Ethereum object', ethereum);
-      }
-
       // Check we're authorised on the user's wallet
       const accounts = await ethereum.request({ method: 'eth_accounts' });
 
       if (accounts.length > 0) {
         const account = accounts[0];
-        console.log('Found an authorised account:', account);
         setCurrentAccount(account);
         getAllGms();
       } else {
@@ -55,7 +47,6 @@ export default function Home() {
 
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
 
-      console.log('Connected', accounts[0]);
       setCurrentAccount(accounts[0]);
     } catch (error) {
       console.log(error);
@@ -72,16 +63,13 @@ export default function Home() {
         const gmPortalContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         const gmTxn = await gmPortalContract.gm('gm', { gasLimit: 300000 });
-        console.log('Mining...', gmTxn.hash);
 
         await gmTxn.wait();
-        console.log('Mined:', gmTxn.hash);
 
         let count = await gmPortalContract.getTotalGms();
         setTotalGms(count.toNumber());
-        console.log('Retrieved total gm count:', count.toNumber());
       } else {
-        console.log("Ethereum object doesn't exist!");
+        return;
       }
     } catch (error) {
       console.log(error);
@@ -107,10 +95,10 @@ export default function Home() {
           });
         });
 
-        console.log({ gmsCleaned });
         setAllGms(gmsCleaned);
+        setTotalGms(gmsCleaned.length);
       } else {
-        console.log("Ethereum object doesn't exist!");
+        return;
       }
     } catch (error) {
       console.log(error);
@@ -125,7 +113,6 @@ export default function Home() {
     let gmPortalContract;
 
     const onNewGm = (from, timestamp, message) => {
-      console.log('New gm', from, timestamp, message);
       setAllGms((prevState) => [
         ...prevState,
         {
@@ -159,11 +146,11 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Grid templateRows="repeat(3, 1fr)" minHeight="100vh">
+      <Grid templateRows="repeat(4, 1fr)" minHeight="100vh">
         <Header />
 
-        <main>
-          <div>
+        <GridItem rowStart={2} rowEnd={2}>
+          <Center>
             {!currentAccount && (
               <Button size="lg" onClick={connectWallet}>
                 Connect Wallet
@@ -172,24 +159,27 @@ export default function Home() {
             <Button size="lg" onClick={gm}>
               gm
             </Button>
-            <Alert status="success">
-              <AlertIcon />
-              {totalGms && totalGms} gms have been gmed
-            </Alert>
-          </div>
+          </Center>
+        </GridItem>
+        <GridItem rowStart={3} rowEnd={3}>
+          <Alert status="success">
+            <AlertIcon />
+            {totalGms && totalGms} gms have been gmed
+          </Alert>
+        </GridItem>
 
-          <div>
-            {allGms.map((gm, index) => {
-              return (
-                <div key={index}>
-                  <div>Address: {gm.address}</div>
-                  <div>Time: {gm.timestamp.toString()}</div>
-                  <div>Message: {gm.message}</div>
-                </div>
-              );
-            })}
-          </div>
-        </main>
+        <GridItem rowStart={4} rowEnd={4}>
+          {allGms.map((gm, index) => {
+            return (
+              <div key={index}>
+                <div>Address: {gm.address}</div>
+                <div>Time: {gm.timestamp.toString()}</div>
+                <div>Message: {gm.message}</div>
+                <br />
+              </div>
+            );
+          })}
+        </GridItem>
       </Grid>
 
       <Footer />
