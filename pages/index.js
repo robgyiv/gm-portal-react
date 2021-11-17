@@ -156,30 +156,36 @@ export default function Home() {
                 Connect Wallet
               </Button>
             )}
-            <Button size="lg" onClick={gm}>
-              gm
-            </Button>
+            {currentAccount && (
+              <Button size="lg" onClick={gm}>
+                gm
+              </Button>
+            )}
           </Center>
         </GridItem>
-        <GridItem rowStart={3} rowEnd={3}>
-          <Alert status="success">
-            <AlertIcon />
-            {totalGms && totalGms} gms have been gmed
-          </Alert>
-        </GridItem>
+        {currentAccount && (
+          <GridItem rowStart={3} rowEnd={3}>
+            <Alert status="success">
+              <AlertIcon />
+              {totalGms && totalGms} gms have been gmed
+            </Alert>
+          </GridItem>
+        )}
 
-        <GridItem rowStart={4} rowEnd={4}>
-          {allGms.map((gm, index) => {
-            return (
-              <div key={index}>
-                <div>Address: {gm.address}</div>
-                <div>Time: {gm.timestamp.toString()}</div>
-                <div>Message: {gm.message}</div>
-                <br />
-              </div>
-            );
-          })}
-        </GridItem>
+        {currentAccount && (
+          <GridItem rowStart={4} rowEnd={4}>
+            {allGms.map((gm, index) => {
+              return (
+                <div key={index}>
+                  <div>Address: {gm.address}</div>
+                  <div>Time: {gm.timestamp.toString()}</div>
+                  <div>Message: {gm.message}</div>
+                  <br />
+                </div>
+              );
+            })}
+          </GridItem>
+        )}
       </Grid>
 
       <Footer />
